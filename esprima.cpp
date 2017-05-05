@@ -846,12 +846,12 @@ struct EsprimaParser {
         return token;
     }
 
-    struct EsprimaRegExp {
+    struct EsprimaRegExp : Poolable {
         std::string literal, pattern, flags;
         int range[2];
 
-        EsprimaRegExp(const std::string &literal, const std::string &pattern, const std::string &flags, int rangeMin, int rangeMax)
-                : literal(literal), pattern(pattern), flags(flags) {
+        EsprimaRegExp(Pool& pool, const std::string &literal, const std::string &pattern, const std::string &flags, int rangeMin, int rangeMax)
+                : Poolable(pool), literal(literal), pattern(pattern), flags(flags) {
             range[0] = rangeMin;
             range[1] = rangeMax;
         }
@@ -941,7 +941,7 @@ struct EsprimaParser {
 
         peek();
 
-        return new EsprimaRegExp(
+        return new EsprimaRegExp(pool,
             str,
             pattern,
             flags,
@@ -1038,13 +1038,13 @@ struct EsprimaParser {
         void postProcess(Node *node) {
         }
 
-        ArrayExpression *createArrayExpression(const std::vector<Expression *> &elements) {
+        ArrayExpression *createArrayExpression(const std::vector<Node *> &elements) {
             ArrayExpression *node = new ArrayExpression(parser.pool);
             node->elements = elements;
             return node;
         }
 
-        AssignmentExpression *createAssignmentExpression(const std::string &operator_, Expression *left, Expression *right) {
+        AssignmentExpression *createAssignmentExpression(const std::string &operator_, Node *left, Node *right) {
             AssignmentExpression *node = new AssignmentExpression(parser.pool);
             node->operator_ = operator_;
             node->left = left;
@@ -1052,7 +1052,7 @@ struct EsprimaParser {
             return node;
         }
 
-        Expression *createBinaryExpression(const std::string &operator_, Expression *left, Expression *right) {
+        Node *createBinaryExpression(const std::string &operator_, Node *left, Node *right) {
             if (operator_ == "||" || operator_ == "&&") {
                 LogicalExpression *node = new LogicalExpression(parser.pool);
                 node->operator_ = operator_;
@@ -1068,7 +1068,7 @@ struct EsprimaParser {
             }
         }
 
-        BlockStatement *createBlockStatement(const std::vector<Statement *> &body) {
+        BlockStatement *createBlockStatement(const std::vector<Node *> &body) {
             BlockStatement *node = new BlockStatement(parser.pool);
             node->body = body;
             return node;
@@ -1080,21 +1080,21 @@ struct EsprimaParser {
             return node;
         }
 
-        CallExpression *createCallExpression(Expression *callee, const std::vector<Expression *> &args) {
+        CallExpression *createCallExpression(Node *callee, const std::vector<Node *> &args) {
             CallExpression *node = new CallExpression(parser.pool);
             node->callee = callee;
             node->arguments = args;
             return node;
         }
 
-        CatchClause *createCatchClause(Expression *param, BlockStatement *body) {
+        CatchClause *createCatchClause(Node *param, BlockStatement *body) {
             CatchClause *node = new CatchClause(parser.pool);
             node->param = param;
             node->body = body;
             return node;
         }
 
-        ConditionalExpression *createConditionalExpression(Expression *test, Expression *consequent, Expression *alternate) {
+        ConditionalExpression *createConditionalExpression(Node *test, Node *consequent, Node *alternate) {
             ConditionalExpression *node = new ConditionalExpression(parser.pool);
             node->test = test;
             node->consequent = consequent;
@@ -1113,7 +1113,7 @@ struct EsprimaParser {
             return node;
         }
 
-        DoWhileStatement *createDoWhileStatement(Statement *body, Expression *test) {
+        DoWhileStatement *createDoWhileStatement(Node *body, Node *test) {
             DoWhileStatement *node = new DoWhileStatement(parser.pool);
             node->body = body;
             node->test = test;
@@ -1125,13 +1125,13 @@ struct EsprimaParser {
             return node;
         }
 
-        ExpressionStatement *createExpressionStatement(Expression *expression) {
+        ExpressionStatement *createExpressionStatement(Node *expression) {
             ExpressionStatement *node = new ExpressionStatement(parser.pool);
             node->expression = expression;
             return node;
         }
 
-        ForStatement *createForStatement(Node *init, Expression *test, Expression *update, Statement *body) {
+        ForStatement *createForStatement(Node *init, Node *test, Node *update, Node *body) {
             ForStatement *node = new ForStatement(parser.pool);
             node->init = init;
             node->test = test;
@@ -1140,7 +1140,7 @@ struct EsprimaParser {
             return node;
         }
 
-        ForInStatement *createForInStatement(Node *left, Expression *right, Statement *body) {
+        ForInStatement *createForInStatement(Node *left, Node *right, Node *body) {
             ForInStatement *node = new ForInStatement(parser.pool);
             node->left = left;
             node->right = right;
@@ -1170,7 +1170,7 @@ struct EsprimaParser {
             return node;
         }
 
-        IfStatement *createIfStatement(Expression *test, Statement *consequent, Statement *alternate) {
+        IfStatement *createIfStatement(Node *test, Node *consequent, Node *alternate) {
             IfStatement *node = new IfStatement(parser.pool);
             node->test = test;
             node->consequent = consequent;
@@ -1178,7 +1178,7 @@ struct EsprimaParser {
             return node;
         }
 
-        LabeledStatement *createLabeledStatement(Identifier *label, Statement *body) {
+        LabeledStatement *createLabeledStatement(Identifier *label, Node *body) {
             LabeledStatement *node = new LabeledStatement(parser.pool);
             node->label = label;
             node->body = body;
@@ -1213,7 +1213,7 @@ struct EsprimaParser {
             return node;
         }
 
-        MemberExpression *createMemberExpression(int accessor, Expression *object, Expression *property) {
+        MemberExpression *createMemberExpression(int accessor, Node *object, Node *property) {
             MemberExpression *node = new MemberExpression(parser.pool);
             node->computed = accessor == '[';
             node->object = object;
@@ -1221,7 +1221,7 @@ struct EsprimaParser {
             return node;
         }
 
-        NewExpression *createNewExpression(Expression *callee, const std::vector<Expression *> &args) {
+        NewExpression *createNewExpression(Node *callee, const std::vector<Node *> &args) {
             NewExpression *node = new NewExpression(parser.pool);
             node->callee = callee;
             node->arguments = args;
@@ -1234,7 +1234,7 @@ struct EsprimaParser {
             return node;
         }
 
-        UpdateExpression *createPostfixExpression(const std::string &operator_, Expression *argument) {
+        UpdateExpression *createPostfixExpression(const std::string &operator_, Node *argument) {
             UpdateExpression *node = new UpdateExpression(parser.pool);
             node->operator_ = operator_;
             node->argument = argument;
@@ -1242,13 +1242,13 @@ struct EsprimaParser {
             return node;
         }
 
-        Program *createProgram(const std::vector<Statement *> &body) {
+        Program *createProgram(const std::vector<Node *> &body) {
             Program *node = new Program(parser.pool);
             node->body = body;
             return node;
         }
 
-        Property *createProperty(const std::string &kind, Expression *key, Expression *value) {
+        Property *createProperty(const std::string &kind, Node *key, Node *value) {
             Property *node = new Property(parser.pool);
             node->key = key;
             node->value = value;
@@ -1256,26 +1256,26 @@ struct EsprimaParser {
             return node;
         }
 
-        ReturnStatement *createReturnStatement(Expression *argument) {
+        ReturnStatement *createReturnStatement(Node *argument) {
             ReturnStatement *node = new ReturnStatement(parser.pool);
             node->argument = argument;
             return node;
         }
 
-        SequenceExpression *createSequenceExpression(const std::vector<Expression *> &expressions) {
+        SequenceExpression *createSequenceExpression(const std::vector<Node *> &expressions) {
             SequenceExpression *node = new SequenceExpression(parser.pool);
             node->expressions = expressions;
             return node;
         }
 
-        SwitchCase *createSwitchCase(Expression *test, const std::vector<Statement *> &consequent) {
+        SwitchCase *createSwitchCase(Node *test, const std::vector<Node *> &consequent) {
             SwitchCase *node = new SwitchCase(parser.pool);
             node->test = test;
             node->consequent = consequent;
             return node;
         }
 
-        SwitchStatement *createSwitchStatement(Expression *discriminant, const std::vector<SwitchCase *> &cases) {
+        SwitchStatement *createSwitchStatement(Node *discriminant, const std::vector<SwitchCase *> &cases) {
             SwitchStatement *node = new SwitchStatement(parser.pool);
             node->discriminant = discriminant;
             node->cases = cases;
@@ -1287,7 +1287,7 @@ struct EsprimaParser {
             return node;
         }
 
-        ThrowStatement *createThrowStatement(Expression *argument) {
+        ThrowStatement *createThrowStatement(Node *argument) {
             ThrowStatement *node = new ThrowStatement(parser.pool);
             node->argument = argument;
             return node;
@@ -1301,7 +1301,7 @@ struct EsprimaParser {
             return node;
         }
 
-        Expression *createUnaryExpression(const std::string &operator_, Expression *argument) {
+        Node *createUnaryExpression(const std::string &operator_, Node *argument) {
             if (operator_ == "++" || operator_ == "--") {
                 UpdateExpression *node = new UpdateExpression(parser.pool);
                 node->operator_ = operator_;
@@ -1323,21 +1323,21 @@ struct EsprimaParser {
             return node;
         }
 
-        VariableDeclarator *createVariableDeclarator(Identifier *id, Expression *init) {
+        VariableDeclarator *createVariableDeclarator(Identifier *id, Node *init) {
             VariableDeclarator *node = new VariableDeclarator(parser.pool);
             node->id = id;
             node->init = init;
             return node;
         }
 
-        WhileStatement *createWhileStatement(Expression *test, Statement *body) {
+        WhileStatement *createWhileStatement(Node *test, Node *body) {
             WhileStatement *node = new WhileStatement(parser.pool);
             node->test = test;
             node->body = body;
             return node;
         }
 
-        WithStatement *createWithStatement(Expression *object, Statement *body) {
+        WithStatement *createWithStatement(Node *object, Node *body) {
             WithStatement *node = new WithStatement(parser.pool);
             node->object = object;
             node->body = body;
@@ -1509,7 +1509,7 @@ struct EsprimaParser {
     // 11.1.4 Array Initialiser
 
     ArrayExpression *parseArrayInitialiser() {
-        std::vector<Expression *> elements;
+        std::vector<Node *> elements;
 
         expect("[");
 
@@ -1547,7 +1547,7 @@ struct EsprimaParser {
         return wtf.close(delegate.createFunctionExpression(NULL, param, body));
     }
 
-    Expression *parseObjectPropertyKey() {
+    Node *parseObjectPropertyKey() {
         WrapTrackingFunction wtf(*this);
         EsprimaToken *token = lex();
 
@@ -1567,8 +1567,8 @@ struct EsprimaParser {
     Property *parseObjectProperty() {
         WrapTrackingFunction wtf(*this);
         EsprimaToken *token;
-        Expression *key;
-        Expression *id, *value;
+        Node *key;
+        Node *id, *value;
         std::vector<Identifier *> param;
 
         token = lookahead;
@@ -1669,12 +1669,12 @@ struct EsprimaParser {
 
     // 11.1.6 The Grouping Operator
 
-    Expression *parseGroupExpression() {
+    Node *parseGroupExpression() {
         WrapTrackingFunction wtf(*this);
         return wtf.close(trackGroupExpression());
 
         /*
-        Expression *expr;
+        Node *expr;
 
         expect("(");
 
@@ -1688,7 +1688,7 @@ struct EsprimaParser {
 
     // 11.1 Primary Expressions
 
-    Expression *parsePrimaryExpression() {
+    Node *parsePrimaryExpression() {
         WrapTrackingFunction wtf(*this);
         int type;
         EsprimaToken *token;
@@ -1748,8 +1748,8 @@ struct EsprimaParser {
 
     // 11.2 Left-Hand-Side Expressions
 
-    std::vector<Expression *> parseArguments() {
-        std::vector<Expression *> args;
+    std::vector<Node *> parseArguments() {
+        std::vector<Node *> args;
 
         expect("(");
 
@@ -1785,9 +1785,9 @@ struct EsprimaParser {
         return parseNonComputedProperty();
     }
 
-    Expression *parseComputedMember() {
+    Node *parseComputedMember() {
         WrapTrackingFunction wtf(*this);
-        Expression *expr;
+        Node *expr;
 
         expect("[");
 
@@ -1800,8 +1800,8 @@ struct EsprimaParser {
 
     NewExpression *parseNewExpression() {
         WrapTrackingFunction wtf(*this);
-        Expression *callee;
-        std::vector<Expression *> args;
+        Node *callee;
+        std::vector<Node *> args;
 
         expectKeyword("new");
         callee = parseLeftHandSideExpression();
@@ -1810,14 +1810,14 @@ struct EsprimaParser {
         return wtf.close(delegate.createNewExpression(callee, args));
     }
 
-    Expression *parseLeftHandSideExpressionAllowCall() {
+    Node *parseLeftHandSideExpressionAllowCall() {
         WrapTrackingFunction wtf(*this);
         return wtf.close(trackLeftHandSideExpressionAllowCall());
 
         /*
-        Expression *expr;
-        std::vector<Expression *> args;
-        Expression *property;
+        Node *expr;
+        std::vector<Node *> args;
+        Node *property;
 
         expr = matchKeyword("new") ? parseNewExpression() : parsePrimaryExpression();
 
@@ -1838,13 +1838,13 @@ struct EsprimaParser {
         */
     }
 
-    Expression *parseLeftHandSideExpression() {
+    Node *parseLeftHandSideExpression() {
         WrapTrackingFunction wtf(*this);
         return wtf.close(trackLeftHandSideExpression());
 
         /*
-        Expression *expr;
-        Expression *property;
+        Node *expr;
+        Node *property;
 
         expr = matchKeyword("new") ? parseNewExpression() : parsePrimaryExpression();
 
@@ -1864,8 +1864,8 @@ struct EsprimaParser {
 
     // 11.3 Postfix Expressions
 
-    Expression *parsePostfixExpression() {
-        Expression *expr = parseLeftHandSideExpressionAllowCall();
+    Node *parsePostfixExpression() {
+        Node *expr = parseLeftHandSideExpressionAllowCall();
         EsprimaToken *token;
 
         if (lookahead->type != Token::Punctuator) {
@@ -1891,10 +1891,10 @@ struct EsprimaParser {
 
     // 11.4 Unary Operators
 
-    Expression *parseUnaryExpression() {
+    Node *parseUnaryExpression() {
         WrapTrackingFunction wtf(*this);
         EsprimaToken *token;
-        Expression *expr;
+        Node *expr;
 
         if (lookahead->type != Token::Punctuator && lookahead->type != Token::Keyword) {
             return wtf.close(parsePostfixExpression());
@@ -1998,18 +1998,18 @@ struct EsprimaParser {
     // 11.10 Binary Bitwise Operators
     // 11.11 Binary Logical Operators
 
-    Expression *parseBinaryExpression() {
+    Node *parseBinaryExpression() {
         WrapTrackingFunction wtf(*this);
-        Expression *expr;
+        Node *expr;
         EsprimaToken *token;
         int prec;
         bool previousAllowIn;
         std::vector<int> precedenceStack;
         std::vector<EsprimaToken *> operatorStack;
-        std::vector<Expression *> expressionStack;
-        Expression *right;
+        std::vector<Node *> expressionStack;
+        Node *right;
         std::string operator_;
-        Expression *left;
+        Node *left;
         int i;
 
         previousAllowIn = state.allowIn;
@@ -2060,11 +2060,11 @@ struct EsprimaParser {
 
     // 11.12 Conditional Operator
 
-    Expression *parseConditionalExpression() {
+    Node *parseConditionalExpression() {
         WrapTrackingFunction wtf(*this);
-        Expression *expr;
+        Node *expr;
         bool previousAllowIn;
-        Expression *consequent, *alternate;
+        Node *consequent, *alternate;
 
         expr = parseBinaryExpression();
 
@@ -2085,10 +2085,10 @@ struct EsprimaParser {
 
     // 11.13 Assignment Operators
 
-    Expression *parseAssignmentExpression() {
+    Node *parseAssignmentExpression() {
         WrapTrackingFunction wtf(*this);
         EsprimaToken *token;
-        Expression *left, *right;
+        Node *left, *right;
 
         token = lookahead;
         left = parseConditionalExpression();
@@ -2114,12 +2114,12 @@ struct EsprimaParser {
 
     // 11.14 Comma Operator
 
-    Expression *parseExpression() {
+    Node *parseExpression() {
         WrapTrackingFunction wtf(*this);
-        Expression *expr = parseAssignmentExpression();
+        Node *expr = parseAssignmentExpression();
 
         if (match(",")) {
-            std::vector<Expression *> expressions;
+            std::vector<Node *> expressions;
             expressions.push_back(expr);
 
             while (index < length) {
@@ -2137,9 +2137,9 @@ struct EsprimaParser {
 
     // 12.1 Block
 
-    std::vector<Statement *> parseStatementList() {
-        std::vector<Statement *> list;
-        Statement *statement;
+    std::vector<Node *> parseStatementList() {
+        std::vector<Node *> list;
+        Node *statement;
 
         while (index < length) {
             if (match("}")) {
@@ -2157,7 +2157,7 @@ struct EsprimaParser {
 
     BlockStatement *parseBlock() {
         WrapTrackingFunction wtf(*this);
-        std::vector<Statement *> block;
+        std::vector<Node *> block;
 
         expect("{");
 
@@ -2168,7 +2168,7 @@ struct EsprimaParser {
         return wtf.close(delegate.createBlockStatement(block));
     }
 
-    // 12.2 Variable Statement
+    // 12.2 Variable Node
 
     Identifier *parseVariableIdentifier() {
         WrapTrackingFunction wtf(*this);
@@ -2184,7 +2184,7 @@ struct EsprimaParser {
     VariableDeclarator *parseVariableDeclaration(const std::string &kind) {
         WrapTrackingFunction wtf(*this);
         Identifier *id = parseVariableIdentifier();
-        Expression *init = NULL;
+        Node *init = NULL;
 
         // 12.2.1
         if (strict && isRestrictedWord(id->name)) {
@@ -2245,17 +2245,17 @@ struct EsprimaParser {
         return wtf.close(delegate.createVariableDeclaration(declarations, kind));
     }
 
-    // 12.3 Empty Statement
+    // 12.3 Empty Node
 
     EmptyStatement *parseEmptyStatement() {
         expect(";");
         return delegate.createEmptyStatement();
     }
 
-    // 12.4 Expression Statement
+    // 12.4 Node Node
 
     ExpressionStatement *parseExpressionStatement() {
-        Expression *expr = parseExpression();
+        Node *expr = parseExpression();
         consumeSemicolon();
         return delegate.createExpressionStatement(expr);
     }
@@ -2263,8 +2263,8 @@ struct EsprimaParser {
     // 12.5 If statement
 
     IfStatement *parseIfStatement() {
-        Expression *test;
-        Statement *consequent, *alternate;
+        Node *test;
+        Node *consequent, *alternate;
 
         expectKeyword("if");
 
@@ -2289,8 +2289,8 @@ struct EsprimaParser {
     // 12.6 Iteration Statements
 
     DoWhileStatement *parseDoWhileStatement() {
-        Statement *body;
-        Expression *test;
+        Node *body;
+        Node *test;
         bool oldInIteration;
 
         expectKeyword("do");
@@ -2318,8 +2318,8 @@ struct EsprimaParser {
     }
 
     WhileStatement *parseWhileStatement() {
-        Expression *test;
-        Statement *body;
+        Node *test;
+        Node *body;
         bool oldInIteration;
 
         expectKeyword("while");
@@ -2348,12 +2348,12 @@ struct EsprimaParser {
         return wtf.close(delegate.createVariableDeclaration(declarations, token->stringValue));
     }
 
-    Statement *parseForStatement() {
+    Node *parseForStatement() {
         Node *init;
-        Expression *test, *update;
+        Node *test, *update;
         Node *left;
-        Expression *right;
-        Statement *body;
+        Node *right;
+        Node *body;
         bool oldInIteration;
         bool leftIsUndefined = true;
 
@@ -2424,8 +2424,8 @@ struct EsprimaParser {
         state.inIteration = oldInIteration;
 
         return (leftIsUndefined) ?
-                static_cast<Statement *>(delegate.createForStatement(init, test, update, body)) :
-                static_cast<Statement *>(delegate.createForInStatement(left, right, body));
+                static_cast<Node *>(delegate.createForStatement(init, test, update, body)) :
+                static_cast<Node *>(delegate.createForInStatement(left, right, body));
     }
 
     // 12.7 The continue statement
@@ -2517,7 +2517,7 @@ struct EsprimaParser {
     // 12.9 The return statement
 
     ReturnStatement *parseReturnStatement() {
-        Expression *argument = NULL;
+        Node *argument = NULL;
 
         expectKeyword("return");
 
@@ -2552,8 +2552,8 @@ struct EsprimaParser {
     // 12.10 The with statement
 
     WithStatement *parseWithStatement() {
-        Expression *object;
-        Statement *body;
+        Node *object;
+        Node *body;
 
         if (strict) {
             throwError(NULL, Messages::StrictModeWith);
@@ -2576,9 +2576,9 @@ struct EsprimaParser {
 
     SwitchCase *parseSwitchCase() {
         WrapTrackingFunction wtf(*this);
-        Expression *test;
-        std::vector<Statement *> consequent;
-        Statement *statement;
+        Node *test;
+        std::vector<Node *> consequent;
+        Node *statement;
 
         if (matchKeyword("default")) {
             lex();
@@ -2601,7 +2601,7 @@ struct EsprimaParser {
     }
 
     SwitchStatement *parseSwitchStatement() {
-        Expression *discriminant;
+        Node *discriminant;
         std::vector<SwitchCase *> cases;
         SwitchCase *clause;
         bool oldInSwitch, defaultFound;
@@ -2649,7 +2649,7 @@ struct EsprimaParser {
     // 12.13 The throw statement
 
     ThrowStatement *parseThrowStatement() {
-        Expression *argument;
+        Node *argument;
 
         expectKeyword("throw");
 
@@ -2668,7 +2668,7 @@ struct EsprimaParser {
 
     CatchClause *parseCatchClause() {
         WrapTrackingFunction wtf(*this);
-        Expression *param;
+        Node *param;
         BlockStatement *body;
 
         expectKeyword("catch");
@@ -2726,11 +2726,11 @@ struct EsprimaParser {
 
     // 12 Statements
 
-    Statement *parseStatement() {
+    Node *parseStatement() {
         WrapTrackingFunction wtf(*this);
         int type = lookahead->type;
-        Expression *expr;
-        Statement *labeledBody;
+        Node *expr;
+        Node *labeledBody;
         std::string key;
 
         if (type == Token::EOF) {
@@ -2808,8 +2808,8 @@ struct EsprimaParser {
 
     BlockStatement *parseFunctionSourceElements() {
         WrapTrackingFunction wtf(*this);
-        Statement *sourceElement;
-        std::vector<Statement *> sourceElements;
+        Node *sourceElement;
+        std::vector<Node *> sourceElements;
         EsprimaToken *token;
         std::string directive;
         EsprimaToken *firstRestricted;
@@ -2874,11 +2874,12 @@ struct EsprimaParser {
         return wtf.close(delegate.createBlockStatement(sourceElements));
     }
 
-    struct ParseParams {
+    struct ParseParams : Poolable {
         std::vector<Identifier *> params;
         EsprimaToken *stricted;
         EsprimaToken *firstRestricted;
         std::string message;
+        ParseParams(Pool& pool) : Poolable(pool){}
     };
 
     ParseParams *parseParams(EsprimaToken *firstRestricted) {
@@ -2927,7 +2928,7 @@ struct EsprimaParser {
 
         expect(")");
 
-        ParseParams *result = new ParseParams;
+        ParseParams *result = new ParseParams(pool);
         result->params = params;
         result->stricted = stricted;
         result->firstRestricted = firstRestricted;
@@ -3038,7 +3039,7 @@ struct EsprimaParser {
 
     // 14 Program
 
-    Statement *parseSourceElement() {
+    Node *parseSourceElement() {
         if (lookahead->type == Token::Keyword) {
             if (lookahead->stringValue == "const" || lookahead->stringValue == "let")
                 return parseConstLetDeclaration(lookahead->stringValue);
@@ -3054,9 +3055,9 @@ struct EsprimaParser {
         return NULL;
     }
 
-    std::vector<Statement *> parseSourceElements() {
-        Statement *sourceElement;
-        std::vector<Statement *> sourceElements;
+    std::vector<Node *> parseSourceElements() {
+        Node *sourceElement;
+        std::vector<Node *> sourceElements;
         EsprimaToken *token;
         std::string directive;
         EsprimaToken *firstRestricted;
@@ -3098,18 +3099,18 @@ struct EsprimaParser {
 
     Program *parseProgram() {
         WrapTrackingFunction wtf(*this);
-        std::vector<Statement *> body;
+        std::vector<Node *> body;
         strict = false;
         peek();
         body = parseSourceElements();
         return wtf.close(delegate.createProgram(body));
     }
 
-    struct EsprimaMarker {
+    struct EsprimaMarker : Poolable{
         EsprimaParser &parser;
         int range[2];
         SourceLocation *loc;
-        EsprimaMarker(EsprimaParser &parser) : parser(parser), loc() { range[0] = range[1] = 0; }
+        EsprimaMarker(Pool& pool, EsprimaParser &parser) : Poolable(pool), parser(parser), loc() { range[0] = range[1] = 0; }
 
         void end() {
             range[1] = parser.index;
@@ -3131,7 +3132,7 @@ struct EsprimaParser {
     };
 
     EsprimaMarker *createLocationMarker() {
-        EsprimaMarker *marker = new EsprimaMarker(*this);
+        EsprimaMarker *marker = new EsprimaMarker(pool, *this);
 
         marker->loc = new SourceLocation(pool);
         marker->loc->start = new Position(pool);
@@ -3144,9 +3145,9 @@ struct EsprimaParser {
         return marker;
     }
 
-    Expression *trackGroupExpression() {
+    Node *trackGroupExpression() {
         EsprimaMarker *marker;
-        Expression *expr;
+        Node *expr;
 
         skipComment();
         marker = createLocationMarker();
@@ -3162,9 +3163,9 @@ struct EsprimaParser {
         return expr;
     }
 
-    Expression *trackLeftHandSideExpression() {
+    Node *trackLeftHandSideExpression() {
         EsprimaMarker *marker;
-        Expression *expr, *property;
+        Node *expr, *property;
 
         skipComment();
         marker = createLocationMarker();
@@ -3188,11 +3189,11 @@ struct EsprimaParser {
         return expr;
     }
 
-    Expression *trackLeftHandSideExpressionAllowCall() {
+    Node *trackLeftHandSideExpressionAllowCall() {
         EsprimaMarker *marker;
-        Expression *expr;
-        std::vector<Expression *> args;
-        Expression *property;
+        Node *expr;
+        std::vector<Node *> args;
+        Node *property;
 
         skipComment();
         marker = createLocationMarker();
@@ -3232,7 +3233,7 @@ struct EsprimaParser {
         }
     }
 
-    void visit(Expression *node, Expression *left, Expression *right) {
+    void visit(Node *node, Node *left, Node *right) {
         visitBinary(left);
         visitBinary(right);
 
@@ -3275,7 +3276,7 @@ struct EsprimaParser {
         }
 
         ~WrapTrackingFunction() {
-            delete marker;
+            //delete marker;
         }
 
         template <typename T>

@@ -35,10 +35,10 @@ namespace esprima {
         Position(Pool &pool) : Poolable(pool), line(), column() {}
     };
 
-    struct SourceLocation {
+    struct SourceLocation : Poolable{
         Position *start;
         Position *end;
-        SourceLocation(Pool &pool) : start(), end() {}
+        SourceLocation(Pool &pool) : Poolable(pool), start(), end() {}
     };
 
     struct Program;
@@ -196,29 +196,22 @@ namespace esprima {
         }
     };
 
-    struct Statement : Node {
-        Statement(Pool &pool) : Node(pool) {}
-    };
-
-    struct Expression : Node {
-        Expression(Pool &pool) : Node(pool) {}
-    };
 
     struct Program : Node {
-        std::vector<Statement *> body;
+        std::vector<Node *> body;
         Program(Pool &pool) : Node(pool) {}
         void accept(Visitor *visitor) { visitor->visit(this); }
     };
 
-    struct Identifier : Expression {
+    struct Identifier : Node {
         std::string name;
-        Identifier(Pool &pool) : Expression(pool) {}
+        Identifier(Pool &pool) : Node(pool) {}
         void accept(Visitor *visitor) { visitor->visit(this); }
     };
 
-    struct BlockStatement : Statement {
-        std::vector<Statement *> body;
-        BlockStatement(Pool &pool) : Statement(pool) {}
+    struct BlockStatement : Node {
+        std::vector<Node *> body;
+        BlockStatement(Pool &pool) : Node(pool) {}
         void accept(Visitor *visitor) { visitor->visit(this); }
     };
 
@@ -230,259 +223,255 @@ namespace esprima {
         Function() : id(), body() {}
     };
 
-    struct EmptyStatement : Statement {
-        EmptyStatement(Pool &pool) : Statement(pool) {}
+    struct EmptyStatement : Node {
+        EmptyStatement(Pool &pool) : Node(pool) {}
         void accept(Visitor *visitor) { visitor->visit(this); }
     };
 
-    struct ExpressionStatement : Statement {
-        Expression *expression;
-        ExpressionStatement(Pool &pool) : Statement(pool), expression() {}
+    struct ExpressionStatement : Node {
+        Node *expression;
+        ExpressionStatement(Pool &pool) : Node(pool), expression() {}
         void accept(Visitor *visitor) { visitor->visit(this); }
     };
 
-    struct IfStatement : Statement {
-        Expression *test;
-        Statement *consequent;
-        Statement *alternate;
-        IfStatement(Pool &pool) : Statement(pool), test(), consequent(), alternate() {}
+    struct IfStatement : Node {
+        Node *test;
+        Node *consequent;
+        Node *alternate;
+        IfStatement(Pool &pool) : Node(pool), test(), consequent(), alternate() {}
         void accept(Visitor *visitor) { visitor->visit(this); }
     };
 
-    struct LabeledStatement : Statement {
+    struct LabeledStatement : Node {
         Identifier *label;
-        Statement *body;
-        LabeledStatement(Pool &pool) : Statement(pool), label(), body() {}
+        Node *body;
+        LabeledStatement(Pool &pool) : Node(pool), label(), body() {}
         void accept(Visitor *visitor) { visitor->visit(this); }
     };
 
-    struct BreakStatement : Statement {
+    struct BreakStatement : Node {
         Identifier *label;
-        BreakStatement(Pool &pool) : Statement(pool), label() {}
+        BreakStatement(Pool &pool) : Node(pool), label() {}
         void accept(Visitor *visitor) { visitor->visit(this); }
     };
 
-    struct ContinueStatement : Statement {
+    struct ContinueStatement : Node {
         Identifier *label;
-        ContinueStatement(Pool &pool) : Statement(pool), label() {}
+        ContinueStatement(Pool &pool) : Node(pool), label() {}
         void accept(Visitor *visitor) { visitor->visit(this); }
     };
 
-    struct WithStatement : Statement {
-        Expression *object;
-        Statement *body;
-        WithStatement(Pool &pool) : Statement(pool), object(), body() {}
+    struct WithStatement : Node {
+        Node *object;
+        Node *body;
+        WithStatement(Pool &pool) : Node(pool), object(), body() {}
         void accept(Visitor *visitor) { visitor->visit(this); }
     };
 
     struct SwitchCase : Node {
-        Expression *test;
-        std::vector<Statement *> consequent;
+        Node *test;
+        std::vector<Node *> consequent;
         SwitchCase(Pool &pool) : Node(pool), test() {}
         void accept(Visitor *visitor) { visitor->visit(this); }
     };
 
-    struct SwitchStatement : Statement {
-        Expression *discriminant;
+    struct SwitchStatement : Node {
+        Node *discriminant;
         std::vector<SwitchCase *> cases;
-        SwitchStatement(Pool &pool) : Statement(pool), discriminant() {}
+        SwitchStatement(Pool &pool) : Node(pool), discriminant() {}
         void accept(Visitor *visitor) { visitor->visit(this); }
     };
 
-    struct ReturnStatement : Statement {
-        Expression *argument;
-        ReturnStatement(Pool &pool) : Statement(pool), argument() {}
+    struct ReturnStatement : Node {
+        Node *argument;
+        ReturnStatement(Pool &pool) : Node(pool), argument() {}
         void accept(Visitor *visitor) { visitor->visit(this); }
     };
 
-    struct ThrowStatement : Statement {
-        Expression *argument;
-        ThrowStatement(Pool &pool) : Statement(pool), argument() {}
+    struct ThrowStatement : Node {
+        Node *argument;
+        ThrowStatement(Pool &pool) : Node(pool), argument() {}
         void accept(Visitor *visitor) { visitor->visit(this); }
     };
 
     struct CatchClause : Node {
-        Expression *param;
+        Node *param;
         BlockStatement *body;
         CatchClause(Pool &pool) : Node(pool), param(), body() {}
         void accept(Visitor *visitor) { visitor->visit(this); }
     };
 
-    struct TryStatement : Statement {
+    struct TryStatement : Node {
         BlockStatement *block;
         CatchClause *handler;
         BlockStatement *finalizer;
-        TryStatement(Pool &pool) : Statement(pool), block(), handler(), finalizer() {}
+        TryStatement(Pool &pool) : Node(pool), block(), handler(), finalizer() {}
         void accept(Visitor *visitor) { visitor->visit(this); }
     };
 
-    struct WhileStatement : Statement {
-        Expression *test;
-        Statement *body;
-        WhileStatement(Pool &pool) : Statement(pool), test(), body() {}
+    struct WhileStatement : Node {
+        Node *test;
+        Node *body;
+        WhileStatement(Pool &pool) : Node(pool), test(), body() {}
         void accept(Visitor *visitor) { visitor->visit(this); }
     };
 
-    struct DoWhileStatement : Statement {
-        Statement *body;
-        Expression *test;
-        DoWhileStatement(Pool &pool) : Statement(pool), body(), test() {}
+    struct DoWhileStatement : Node {
+        Node *body;
+        Node *test;
+        DoWhileStatement(Pool &pool) : Node(pool), body(), test() {}
         void accept(Visitor *visitor) { visitor->visit(this); }
     };
 
-    struct ForStatement : Statement {
-        Node *init; // Either a VariableDeclaration or an Expression
-        Expression *test;
-        Expression *update;
-        Statement *body;
-        ForStatement(Pool &pool) : Statement(pool), init(), test(), update(), body() {}
+    struct ForStatement : Node {
+        Node *init; // Either a VariableDeclaration or an Node
+        Node *test;
+        Node *update;
+        Node *body;
+        ForStatement(Pool &pool) : Node(pool), init(), test(), update(), body() {}
         void accept(Visitor *visitor) { visitor->visit(this); }
     };
 
-    struct ForInStatement : Statement {
-        Node *left; // Either a VariableDeclaration or an Expression
-        Expression *right;
-        Statement *body;
-        ForInStatement(Pool &pool) : Statement(pool), left(), right(), body() {}
+    struct ForInStatement : Node {
+        Node *left; // Either a VariableDeclaration or an Node
+        Node *right;
+        Node *body;
+        ForInStatement(Pool &pool) : Node(pool), left(), right(), body() {}
         void accept(Visitor *visitor) { visitor->visit(this); }
     };
 
-    struct DebuggerStatement : Statement {
-        DebuggerStatement(Pool &pool) : Statement(pool) {}
+    struct DebuggerStatement : Node {
+        DebuggerStatement(Pool &pool) : Node(pool) {}
         void accept(Visitor *visitor) { visitor->visit(this); }
     };
 
-    struct Declaration : Statement {
-        Declaration(Pool &pool) : Statement(pool) {}
-    };
-
-    struct FunctionDeclaration : Declaration, Function {
-        FunctionDeclaration(Pool &pool) : Declaration(pool) {}
+    struct FunctionDeclaration : Node, Function {
+        FunctionDeclaration(Pool &pool) : Node(pool) {}
         void accept(Visitor *visitor) { visitor->visit(this); }
     };
 
     struct VariableDeclarator : Node {
         Identifier *id;
-        Expression *init;
+        Node *init;
         VariableDeclarator(Pool &pool) : Node(pool), id(), init() {}
         void accept(Visitor *visitor) { visitor->visit(this); }
     };
 
-    struct VariableDeclaration : Declaration {
+    struct VariableDeclaration : Node {
         std::vector<VariableDeclarator *> declarations;
         std::string kind;
-        VariableDeclaration(Pool &pool) : Declaration(pool) {}
+        VariableDeclaration(Pool &pool) : Node(pool) {}
         void accept(Visitor *visitor) { visitor->visit(this); }
     };
 
-    struct ThisExpression : Expression {
-        ThisExpression(Pool &pool) : Expression(pool) {}
+    struct ThisExpression : Node {
+        ThisExpression(Pool &pool) : Node(pool) {}
         void accept(Visitor *visitor) { visitor->visit(this); }
     };
 
-    struct ArrayExpression : Expression {
-        std::vector<Expression *> elements;
-        ArrayExpression(Pool &pool) : Expression(pool) {}
+    struct ArrayExpression : Node {
+        std::vector<Node *> elements;
+        ArrayExpression(Pool &pool) : Node(pool) {}
         void accept(Visitor *visitor) { visitor->visit(this); }
     };
 
     struct Property : Node {
         std::string kind;
-        Expression *key; // Either a Literal or an Identifier
-        Expression *value;
+        Node *key; // Either a Literal or an Identifier
+        Node *value;
         Property(Pool &pool) : Node(pool), key(), value() {}
         void accept(Visitor *visitor) { visitor->visit(this); }
     };
 
-    struct ObjectExpression : Expression {
+    struct ObjectExpression : Node {
         std::vector<Property *> properties;
-        ObjectExpression(Pool &pool) : Expression(pool) {}
+        ObjectExpression(Pool &pool) : Node(pool) {}
         void accept(Visitor *visitor) { visitor->visit(this); }
     };
 
-    struct FunctionExpression : Expression, Function {
-        FunctionExpression(Pool &pool) : Expression(pool) {}
+    struct FunctionExpression : Node, Function {
+        FunctionExpression(Pool &pool) : Node(pool) {}
         void accept(Visitor *visitor) { visitor->visit(this); }
     };
 
-    struct SequenceExpression : Expression {
-        std::vector<Expression *> expressions;
-        SequenceExpression(Pool &pool) : Expression(pool) {}
+    struct SequenceExpression : Node {
+        std::vector<Node *> expressions;
+        SequenceExpression(Pool &pool) : Node(pool) {}
         void accept(Visitor *visitor) { visitor->visit(this); }
     };
 
-    struct UnaryExpression : Expression {
+    struct UnaryExpression : Node {
         std::string operator_;
         bool prefix;
-        Expression *argument;
-        UnaryExpression(Pool &pool) : Expression(pool), prefix(), argument() {}
+        Node *argument;
+        UnaryExpression(Pool &pool) : Node(pool), prefix(), argument() {}
         void accept(Visitor *visitor) { visitor->visit(this); }
     };
 
-    struct BinaryExpression : Expression {
+    struct BinaryExpression : Node {
         std::string operator_;
-        Expression *left;
-        Expression *right;
-        BinaryExpression(Pool &pool) : Expression(pool), left(), right() {}
+        Node *left;
+        Node *right;
+        BinaryExpression(Pool &pool) : Node(pool), left(), right() {}
         void accept(Visitor *visitor) { visitor->visit(this); }
     };
 
-    struct AssignmentExpression : Expression {
+    struct AssignmentExpression : Node {
         std::string operator_;
-        Expression *left;
-        Expression *right;
-        AssignmentExpression(Pool &pool) : Expression(pool), left(), right() {}
+        Node *left;
+        Node *right;
+        AssignmentExpression(Pool &pool) : Node(pool), left(), right() {}
         void accept(Visitor *visitor) { visitor->visit(this); }
     };
 
-    struct UpdateExpression : Expression {
+    struct UpdateExpression : Node {
         std::string operator_;
-        Expression *argument;
+        Node *argument;
         bool prefix;
-        UpdateExpression(Pool &pool) : Expression(pool), argument(), prefix() {}
+        UpdateExpression(Pool &pool) : Node(pool), argument(), prefix() {}
         void accept(Visitor *visitor) { visitor->visit(this); }
     };
 
-    struct LogicalExpression : Expression {
+    struct LogicalExpression : Node {
         std::string operator_;
-        Expression *left;
-        Expression *right;
-        LogicalExpression(Pool &pool) : Expression(pool), left(), right() {}
+        Node *left;
+        Node *right;
+        LogicalExpression(Pool &pool) : Node(pool), left(), right() {}
         void accept(Visitor *visitor) { visitor->visit(this); }
     };
 
-    struct ConditionalExpression : Expression {
-        Expression *test;
-        Expression *alternate;
-        Expression *consequent;
-        ConditionalExpression(Pool &pool) : Expression(pool), test(), alternate(), consequent() {}
+    struct ConditionalExpression : Node {
+        Node *test;
+        Node *alternate;
+        Node *consequent;
+        ConditionalExpression(Pool &pool) : Node(pool), test(), alternate(), consequent() {}
         void accept(Visitor *visitor) { visitor->visit(this); }
     };
 
-    struct NewExpression : Expression {
-        Expression *callee;
-        std::vector<Expression *> arguments;
-        NewExpression(Pool &pool) : Expression(pool), callee() {}
+    struct NewExpression : Node {
+        Node *callee;
+        std::vector<Node *> arguments;
+        NewExpression(Pool &pool) : Node(pool), callee() {}
         void accept(Visitor *visitor) { visitor->visit(this); }
     };
 
-    struct CallExpression : Expression {
-        Expression *callee;
-        std::vector<Expression *> arguments;
-        CallExpression(Pool &pool) : Expression(pool), callee() {}
+    struct CallExpression : Node {
+        Node *callee;
+        std::vector<Node *> arguments;
+        CallExpression(Pool &pool) : Node(pool), callee() {}
         void accept(Visitor *visitor) { visitor->visit(this); }
     };
 
-    struct MemberExpression : Expression {
-        Expression *object;
-        Expression *property; // Identifier if computed == false
+    struct MemberExpression : Node {
+        Node *object;
+        Node *property; // Identifier if computed == false
         bool computed;
-        MemberExpression(Pool &pool) : Expression(pool), object(), property(), computed() {}
+        MemberExpression(Pool &pool) : Node(pool), object(), property(), computed() {}
         void accept(Visitor *visitor) { visitor->visit(this); }
     };
 
-    struct Literal : Expression {
-        Literal(Pool &pool) : Expression(pool) {}
+    struct Literal : Node {
+        Literal(Pool &pool) : Node(pool) {}
     };
 
     struct NullLiteral : Literal {
